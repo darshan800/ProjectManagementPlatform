@@ -8,6 +8,7 @@ import { asyncHandler } from "../utils/async-handler.js";
 import mongoose from "mongoose";
 import { AvailableUserRole, UserRolesEnum } from "../utils/constants.js";
 
+//list the tasks
 const getTasks = asyncHandler(async (req, res) => {
   const { projectId } = req.params;
 
@@ -25,6 +26,7 @@ const getTasks = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, tasks, "task fetched succesfully"));
 });
 
+// create the task
 const createTask = asyncHandler(async (req, res) => {
   const { title, description, status, assignedTo } = req.body;
   const { projectId } = req.params;
@@ -61,16 +63,96 @@ const createTask = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, task, "Task created succesfully"));
 });
 
-const getTaskById = asyncHandler(async (req, res) => {});
+//get the tasks by id
+const getTaskById = asyncHandler(async (req, res) => {
+  const { taskId } = req.params;
 
+  const task = await Task.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(taskId),
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "assignedTo",
+        foreignField: "_id",
+        as: "assignedTo",
+        pipeline: [
+          {
+            _id: 1,
+            username: 1,
+            fullName: 1,
+            avatar: 1,
+          },
+        ],
+      },
+    },
+    {
+      $lookup: {
+        from: "subtasks",
+        localField: "_id",
+        foreignField: "task",
+        as: "subtasks",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "createdBy",
+              foreignField: "_id",
+              as: "createdBy",
+              pipeline: [
+                {
+                  $project: {
+                    _id: 1,
+                    username: 1,
+                    fullName: 1,
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $addFields: {
+              createdBy: {
+                $arrayElemAt: ["$createdBy", 0],
+              },
+            },
+          },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        assignedTo: {
+          $arrayElemAt: ["$assignedTo", 0],
+        },
+      },
+    },
+  ]);
+  if (!task || task.length === 0) {
+    throw new ApiError(404, "Task not found");
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, task[0], "Task fetched successfully"));
+});
+
+//update the tasks
 const updateTask = asyncHandler(async (req, res) => {});
 
+//delete the tasks
 const deleteTask = asyncHandler(async (req, res) => {});
 
+//create sub task
 const createSubTask = asyncHandler(async (req, res) => {});
 
+//update the subtask
 const updateSubTask = asyncHandler(async (req, res) => {});
 
+//delete the subtask
 const deleteSubTask = asyncHandler(async (req, res) => {});
 
 export {
