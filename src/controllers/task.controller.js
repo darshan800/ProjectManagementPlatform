@@ -1,5 +1,6 @@
 import { User } from "../models/user.models.js";
 import { Project } from "../models/project.models.js";
+import { ProjectMember } from "../models/projectmember.models.js";
 import { SubTask } from "../models/subtask.models.js";
 import { Task } from "../models/task.models.js";
 import { ApiError } from "../utils/api-error.js";
@@ -141,19 +142,208 @@ const getTaskById = asyncHandler(async (req, res) => {
 });
 
 //update the tasks
-const updateTask = asyncHandler(async (req, res) => {});
+const updateTask = asyncHandler(async (req, res) => {
+  const { taskId } = req.params;
+  const { project, assignedBy, assignedTo, status, attachments } = req.body;
+  const allowedStatus = ["todo", "in_progress", "done"];
+
+  const allowedUser = ["admin", "project_admin"];
+  if (!req.user || !allowedUser.includes(req.user.role)) {
+    throw new ApiError(403, "Unauthorized to perform this action");
+  }
+
+  if (status && !allowedStatus.includes(status)) {
+    throw new ApiError(400, "Inavlid status");
+  }
+
+  const updatefeilds = {};
+
+  if (project) updatefeilds.project = project;
+  if (assignedBy) updatefeilds.assignedBy = assignedBy;
+  if (assignedTo) updatefeilds.assignedTo = assignedTo;
+  if (status) updatefeilds.status = status;
+  if (attachments) updatefeilds.attachments = attachments;
+
+  const task = await Task.findByIdAndUpdate(
+    taskId,
+    {
+      $set: updatefeilds,
+    },
+    {
+      new: true,
+    },
+  );
+
+  if (!task) throw new ApiError(404, "Task does not exist");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, task, "Task updated succesfully"));
+});
 
 //delete the tasks
-const deleteTask = asyncHandler(async (req, res) => {});
+const deleteTask = asyncHandler(async (req, res) => {
+  const { taskId } = req.params;
+
+  // only admins and project_admins role can delete
+  const allowedUser = ["admin", "project_admin"];
+  if (!req.user || !allowedUser.includes(req.user.role)) {
+    throw new ApiError(403, "Unauthorized to perform this action");
+  }
+
+  //check whether taskId exist or not
+  const task = await Task.findById(taskId);
+
+  if (!task) {
+    throw new ApiError(404, "task not found");
+  }
+
+  //only user of that project can delete
+  const isMember = await ProjectMember.findOne({
+    project: task.project,
+    user: req.user._id,
+  });
+
+  if (!isMember) {
+    throw new ApiError(403, "You are not a part of this project");
+  }
+
+  await Task.findByIdAndDelete(taskId);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Task deleted successfully"));
+});
 
 //create sub task
-const createSubTask = asyncHandler(async (req, res) => {});
+const createSubTask = asyncHandler(async (req, res) => {
+  const { taskId } = req.params;
+  const { title } = req.body;
+  const task = await Task.findById(taskId);
+
+  //only admin or project admin can create subtask
+  const allowedUser = ["admin", "project_admin"];
+  if (!req.user || !allowedUser.includes(req.user.role)) {
+    throw new ApiError(403, "You are not allowed to perform this action");
+  }
+
+  if (!task) {
+    throw new ApiError(404, "Task does not found");
+  }
+
+  //check whether the user is part of project or not
+  const isMember = await ProjectMember.findOne({
+    project: task.project,
+    user: req.user._id,
+  });
+
+  if (!isMember) {
+    throw new ApiError(403, "You are not part of the project");
+  }
+
+  //creation
+  const subtask = await SubTask.create({
+    title,
+    task: new mongoose.Types.ObjectId(taskId),
+    isCompleted: false,
+  });
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, subtask, "subtask is created successfully"));
+});
 
 //update the subtask
-const updateSubTask = asyncHandler(async (req, res) => {});
+const updateSubTask = asyncHandler(async (req, res) => {
+  const { subTaskId } = req.params;
+  const { title, isCompleted } = req.body;
+
+  if (!req.user) {
+    throw new ApiError(403, "Unauthorized");
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(subTaskId)) {
+    throw new ApiError(400, "Invalid subtask ID");
+  }
+
+  const subtask = await SubTask.findById(subTaskId);
+  if (!subtask) {
+    throw new ApiError(404, "Subtask not found");
+  }
+
+  const task = await Task.findById(subtask.task);
+  if (!task) {
+    throw new ApiError(404, "Parent task not found");
+  }
+
+  // membership check
+  const isMember = await ProjectMember.findOne({
+    project: task.project,
+    user: req.user._id,
+  });
+
+  if (!isMember) {
+    throw new ApiError(403, "You are not part of the project");
+  }
+
+  // ✅ update completion (allowed for all members)
+  if (isCompleted !== undefined) {
+    subtask.isCompleted = isCompleted;
+  }
+
+  // ✅ update title (restricted)
+  if (title) {
+    if (!["admin", "project_admin"].includes(req.user.role)) {
+      throw new ApiError(403, "Not allowed to update title");
+    }
+
+    if (title.trim() === "") {
+      throw new ApiError(400, "Title cannot be empty");
+    }
+
+    subtask.title = title;
+  }
+
+  await subtask.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, subtask, "Subtask updated successfully"));
+});
 
 //delete the subtask
-const deleteSubTask = asyncHandler(async (req, res) => {});
+const deleteSubTask = asyncHandler(async (req, res) => {
+  const { subTaskId } = req.params;
+  const allowedUser = ["admin", "project_admin"];
+
+  const subtask = await SubTask.findById(subTaskId);
+  if (!subtask) {
+    throw new ApiError(404, "subtask does not exist");
+  }
+
+  if (!req.user || !allowedUser.includes(req.user.role)) {
+    throw new ApiError(403, "You are not allowed to perform this action");
+  }
+
+  const task = await Task.findById(subtask.task);
+  if (!task) {
+    throw new ApiError(404, "parent task not found");
+  }
+  //check whether the user is part of project or not
+  const isMember = await ProjectMember.findOne({
+    project: task.project,
+    user: req.user._id,
+  });
+
+  if (!isMember) {
+    throw new ApiError(403, "You are not part of the project");
+  }
+  await SubTask.findByIdAndDelete(subTaskId);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Subtask deleted successfully"));
+});
 
 export {
   createSubTask,
