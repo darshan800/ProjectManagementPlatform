@@ -86,6 +86,99 @@ const addMembersToProjectValidator = () => {
       .withMessage("The role you provided is does not exist"),
   ];
 };
+
+//create -task validators
+const createTaskValidator = () => {
+  return [
+    body("title").notEmpty().withMessage("title is required for the task"),
+
+    body("description")
+      .notEmpty()
+      .toString()
+      .withMessage("Description must be string and not empty"),
+
+    body("assignedTo")
+      .optional()
+      .isMongoId()
+      .withMessage("assignedTo must be valid user id"),
+
+    body("status")
+      .optional()
+      .isIn(["todo", "in_progress", "done"])
+      .withMessage("Invalid status value"),
+  ];
+};
+
+//get-task details
+const getTaskDetails = () => {
+  return [
+    param("projectId").isMongoId().withMessage("Invalid projecct id"),
+    param("taskId").isMongoId().withMessage("Invalid task id"),
+  ];
+};
+//update-task
+const updateTask = () => {
+  return [
+    param("projectId").isMongoId().withMessage("Inavlid projectId"),
+    param("taskId").isMongoId().withMessage("Inavlid taskId"),
+    body("title").optional().notEmpty().withMessage("Title cannot be empty"),
+
+    body("description")
+      .optional()
+      .isString()
+      .withMessage("Description must be a string"),
+
+    body("assignedTo")
+      .optional()
+      .isMongoId()
+      .withMessage("assignedTo must be valid"),
+
+    body("status")
+      .optional()
+      .isIn(["todo", "in_progress", "done"])
+      .withMessage("Invalid status"),
+  ];
+};
+
+//delete -task
+const deleteTask = () => {
+  return [
+    param("projectId").isMongoId().withMessage("Invalid projectId"),
+    param("taskId").isMongoId().withMessage("Invalid taskId"),
+  ];
+};
+
+//create -subtask
+const createSubTask = () => {
+  return [
+    param("projectId").isMongoId().withMessage("Invalid projectId"),
+    param("taskId").isMongoId().withMessage("Invalid taskId"),
+
+    body("title").notEmpty().withMessage("Title is required"),
+  ];
+};
+
+//update-subtask
+const updateSubtask = () => {
+  return [
+    param("projectId").isMongoId().withMessage("Invalid projectId"),
+    param("subTaskId").isMongoId().withMessage("Invalid subTaskId"),
+    body("title").optional().notEmpty().withMessage("Title cannot be empty"),
+
+    body("isCompleted")
+      .optional()
+      .isBoolean()
+      .withMessage("isCompleted must be boolean"),
+  ];
+};
+
+//delete-subtask
+const deleteSubTask = () => {
+  return [
+    param("projectId").notEmpty().isMongoId().withMessage("Invalid projectId"),
+    param("subTaskId").notEmpty().isMongoId().withMessage("Invalid subTaskId"),
+  ];
+};
 export {
   userRegisterValidator,
   userLoginValidator,
@@ -94,4 +187,7 @@ export {
   userResetForgotPasswordValidator,
   createProjectValidator,
   addMembersToProjectValidator,
+  createTaskValidator,
+  getTaskDetails,
+  updateTask,
 };

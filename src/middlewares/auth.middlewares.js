@@ -32,11 +32,11 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
 });
 
 export const validateProjectPermission = (roles = []) => {
-  asyncHandler(async (req, res, next) => {
+ return  asyncHandler(async (req, res, next) => {
     const { projectId } = req.params;
 
     if (!projectId) {
-      throw new ApiError(404, "project not found");
+      throw new ApiError(400,  "Project ID is required");
     }
 
     const project = await ProjectMember.findOne({
@@ -45,7 +45,7 @@ export const validateProjectPermission = (roles = []) => {
     });
 
     if (!project) {
-      throw new ApiError(400, "project not found");
+      throw new ApiError(400, "You are not a member of this project");
     }
 
     const givenRole = project?.role;
