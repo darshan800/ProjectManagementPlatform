@@ -25,15 +25,15 @@ const getProjects = asyncHandler(async (req, res) => {
     {
       $lookup: {
         from: "projects",
-        localFields: "projects",
+        localField: "project", // ✅ fixed typo
         foreignField: "_id",
         as: "projects",
         pipeline: [
           {
             $lookup: {
-              from: "projectMembers",
+              from: "projectmembers", // ✅ correct collection name
               localField: "_id",
-              foreignField: "projects",
+              foreignField: "project",
               as: "projectmembers",
             },
           },
@@ -44,31 +44,32 @@ const getProjects = asyncHandler(async (req, res) => {
               },
             },
           },
-          {
-            $unwind: "$project",
-          },
-          {
-            $project: {
-              project: {
-                _id: 1,
-                name: 1,
-                description: 1,
-                members: 1,
-                createdAt: 1,
-                createdBy: 1,
-              },
-
-              role: 1,
-              _id: 0,
-            },
-          },
         ],
       },
     },
+    {
+      $unwind: "$projects", // ✅ moved outside, correct field
+    },
+    {
+      $project: {
+        projects: {
+          // ✅ correct field name
+          _id: 1,
+          name: 1,
+          description: 1,
+          members: 1,
+          createdAt: 1,
+          createdBy: 1,
+        },
+        role: 1,
+        _id: 0,
+      },
+    },
   ]);
+
   return res
-    .status(201)
-    .json(new ApiResponse(201, projects, "Projects fetche succesfully"));
+    .status(200) // ✅ correct status code
+    .json(new ApiResponse(200, projects, "Projects fetched successfully"));
 });
 
 //get project details by id
@@ -154,7 +155,7 @@ const addMembersToProject = asyncHandler(async (req, res) => {
     throw new ApiError(404, "User does not exist");
   }
 
-  await ProjectMember.findByOneAndUpdate(
+  await ProjectMember.findOneAndUpdate(
     {
       user: new mongoose.Types.ObjectId(user._id),
       project: new mongoose.Types.ObjectId(projectId),
@@ -255,14 +256,12 @@ const updateMemberRole = asyncHandler(async (req, res) => {
   if (!projectmembers) {
     throw new ApiError(400, "project member does not exist");
   }
-  projectmembers = await ProjectMember.findByIdAndUpdate(
+  projectmembers = await ProjectMember.findOneAndUpdate(
     {
       user: new mongoose.Types.ObjectId(userId),
       project: new mongoose.Types.ObjectId(projectId),
     },
     {
-      user: new mongoose.Types.ObjectId(userId),
-      project: new mongoose.Types.ObjectId(projectId),
       role: newRole,
     },
     {
