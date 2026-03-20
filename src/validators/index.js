@@ -110,14 +110,14 @@ const createTaskValidator = () => {
 };
 
 //get-task details
-const getTaskDetails = () => {
+const getTaskDetailsValidator = () => {
   return [
     param("projectId").isMongoId().withMessage("Invalid projecct id"),
     param("taskId").isMongoId().withMessage("Invalid task id"),
   ];
 };
 //update-task
-const updateTask = () => {
+const updateTaskValidator = () => {
   return [
     param("projectId").isMongoId().withMessage("Inavlid projectId"),
     param("taskId").isMongoId().withMessage("Inavlid taskId"),
@@ -141,7 +141,7 @@ const updateTask = () => {
 };
 
 //delete -task
-const deleteTask = () => {
+const deleteTaskValidator = () => {
   return [
     param("projectId").isMongoId().withMessage("Invalid projectId"),
     param("taskId").isMongoId().withMessage("Invalid taskId"),
@@ -149,7 +149,7 @@ const deleteTask = () => {
 };
 
 //create -subtask
-const createSubTask = () => {
+const createSubTaskValidator = () => {
   return [
     param("projectId").isMongoId().withMessage("Invalid projectId"),
     param("taskId").isMongoId().withMessage("Invalid taskId"),
@@ -159,7 +159,7 @@ const createSubTask = () => {
 };
 
 //update-subtask
-const updateSubtask = () => {
+const updateSubtaskValidator = () => {
   return [
     param("projectId").isMongoId().withMessage("Invalid projectId"),
     param("subTaskId").isMongoId().withMessage("Invalid subTaskId"),
@@ -173,7 +173,7 @@ const updateSubtask = () => {
 };
 
 //delete-subtask
-const deleteSubTask = () => {
+const deleteSubTaskValidator = () => {
   return [
     param("projectId").notEmpty().isMongoId().withMessage("Invalid projectId"),
     param("subTaskId").notEmpty().isMongoId().withMessage("Invalid subTaskId"),
@@ -188,6 +188,10 @@ export {
   createProjectValidator,
   addMembersToProjectValidator,
   createTaskValidator,
-  getTaskDetails,
-  updateTask,
+  getTaskDetailsValidator,
+  updateTaskValidator,
+  deleteTaskValidator,
+  createSubTaskValidator,
+  updateSubtaskValidator,
+  deleteSubTaskValidator,
 };
