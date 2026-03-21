@@ -43,12 +43,12 @@ router
     getTasks,
   )
   .post(
+    createTaskValidator(),
+    validate,
     validateProjectPermission([
       UserRolesEnum.ADMIN,
       UserRolesEnum.PROJECT_ADMIN,
     ]),
-    createTaskValidator(),
-    validate,
     createTask,
   );
 

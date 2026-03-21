@@ -94,7 +94,7 @@ const createTaskValidator = () => {
 
     body("description")
       .notEmpty()
-      .toString()
+      .isString()
       .withMessage("Description must be string and not empty"),
 
     body("assignedTo")

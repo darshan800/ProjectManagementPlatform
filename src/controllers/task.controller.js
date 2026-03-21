@@ -82,10 +82,12 @@ const getTaskById = asyncHandler(async (req, res) => {
         as: "assignedTo",
         pipeline: [
           {
-            _id: 1,
-            username: 1,
-            fullName: 1,
-            avatar: 1,
+            $project: {
+              _id: 1,
+              username: 1,
+              fullName: 1,
+              avatar: 1,
+            },
           },
         ],
       },
@@ -245,6 +247,7 @@ const createSubTask = asyncHandler(async (req, res) => {
   const subtask = await SubTask.create({
     title,
     task: new mongoose.Types.ObjectId(taskId),
+    createdBy: req.user._id,
     isCompleted: false,
   });
 
