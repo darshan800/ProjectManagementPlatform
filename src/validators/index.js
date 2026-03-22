@@ -179,6 +179,70 @@ const deleteSubTaskValidator = () => {
     param("subTaskId").notEmpty().isMongoId().withMessage("Invalid subTaskId"),
   ];
 };
+
+//list notes
+const getNotesValiadtor = () => {
+  return [
+    param("projectId")
+      .notEmpty()
+      .isMongoId()
+      .withMessage("Provide valid projectId"),
+  ];
+};
+
+//create notes validators
+const createNotesValidator = () => {
+  return [
+    body("content")
+      .notEmpty()
+      .withMessage("content should not be empty")
+      .isString()
+      .withMessage("content should be in string only"),
+
+    param("projectId")
+      .notEmpty()
+      .isMongoId()
+      .withMessage("Provide valid projectId"),
+  ];
+};
+
+//details of the notes validators
+const getNotesByIdValidator = () => {
+  return [
+    param("projectId")
+      .notEmpty()
+      .isMongoId()
+      .withMessage("Provide valid projectId"),
+    param("noteId").notEmpty().isMongoId().withMessage("Provide valid noteId"),
+  ];
+};
+
+//update Notes validators
+const updateNotesValidator = () => {
+  return [
+    param("projectId")
+      .notEmpty()
+      .isMongoId()
+      .withMessage("Provide valid projectId"),
+    param("noteId").notEmpty().isMongoId().withMessage("Provide valid noteId"),
+    body("content")
+      .notEmpty()
+      .withMessage("conetnt should not be empty")
+      .isString()
+      .withMessage("conetnet should be in string only"),
+  ];
+};
+
+//delete note validator
+const deleteNotesValidator = () => {
+  return [
+    param("projectId")
+      .notEmpty()
+      .isMongoId()
+      .withMessage("Provide valid projectId"),
+    param("noteId").notEmpty().isMongoId().withMessage("Provide valid noteId"),
+  ];
+};
 export {
   userRegisterValidator,
   userLoginValidator,
@@ -194,4 +258,9 @@ export {
   createSubTaskValidator,
   updateSubtaskValidator,
   deleteSubTaskValidator,
+  getNotesValiadtor,
+  createNotesValidator,
+  getNotesByIdValidator,
+  updateNotesValidator,
+  deleteNotesValidator,
 };
