@@ -27,11 +27,13 @@ import healthcheckRouter from "./routes/healthcheck.routes.js";
 import authRouter from "./routes/auth.routes.js";
 import projectRouter from "./routes/project.routes.js";
 import taskRouter from "./routes/task.routes.js";
+import notesRouter from "./routes/notes.routes.js";
 
 app.use("/api/v1/healthcheck", healthcheckRouter);
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/projects", projectRouter);
-app.use("/api/v1/tasks",taskRouter);
+app.use("/api/v1/tasks", taskRouter);
+app.use("/api/v1/notes", notesRouter);
 
 app.get("/", (req, res) => {
   res.send("welcome to basecampy!!");

@@ -27,16 +27,16 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
     req.user = user;
     next();
   } catch (error) {
-    throw new ApiError(401, "Invalid access token");
+    throw new ApiError(401, error?.message || "Invalid access token");
   }
 });
 
 export const validateProjectPermission = (roles = []) => {
- return  asyncHandler(async (req, res, next) => {
+  return asyncHandler(async (req, res, next) => {
     const { projectId } = req.params;
 
     if (!projectId) {
-      throw new ApiError(400,  "Project ID is required");
+      throw new ApiError(400, "Project ID is required");
     }
 
     const project = await ProjectMember.findOne({
