@@ -34,6 +34,8 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
 export const validateProjectPermission = (roles = []) => {
   return asyncHandler(async (req, res, next) => {
     const { projectId } = req.params;
+    // console.log("projectId from params:", projectId); // add this
+    // console.log("user id:", req.user._id); // add this
 
     if (!projectId) {
       throw new ApiError(400, "Project ID is required");
@@ -43,12 +45,16 @@ export const validateProjectPermission = (roles = []) => {
       user: new mongoose.Types.ObjectId(req.user._id),
       project: new mongoose.Types.ObjectId(projectId),
     });
+    // console.log("project member found:", project); // add this
 
     if (!project) {
       throw new ApiError(400, "You are not a member of this project");
     }
 
     const givenRole = project?.role;
+    // console.log("givenRole:", givenRole); // add this
+    // console.log("roles array:", roles); // add this
+    // console.log("includes check:", roles.includes(givenRole)); // add this
 
     req.user.role = givenRole;
 
@@ -59,6 +65,7 @@ export const validateProjectPermission = (roles = []) => {
       );
     }
 
+    // console.log("Permission check passed, calling next()"); // add this
     next();
   });
 };
