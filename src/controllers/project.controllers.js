@@ -156,6 +156,12 @@ const addMembersToProject = asyncHandler(async (req, res) => {
     throw new ApiError(404, "User does not exist");
   }
 
+  // add this
+const project = await Project.findById(projectId);
+if (!project) {
+  throw new ApiError(404, "Project not found");
+}
+
   await ProjectMember.findOneAndUpdate(
     {
       user: new mongoose.Types.ObjectId(user._id),
@@ -171,6 +177,26 @@ const addMembersToProject = asyncHandler(async (req, res) => {
       upsert: true,
     },
   );
+
+  // send email notification to added member
+  await sendEmail({
+    email: user.email,
+    subject: `You have been added to project "${project.name}"`,
+    mailgenContent: {
+      body: {
+        name: user.username,
+        intro: `You have been added to project "${project.name}" as ${role}.`,
+        table: {
+          data: [
+            { item: "Project", description: project.name },
+            { item: "Role", description: role },
+            { item: "Added By", description: req.user.username },
+          ],
+        },
+        outro: "Please login to Project Camp to view your project.",
+      },
+    },
+  });
 
   return res
     .status(201)

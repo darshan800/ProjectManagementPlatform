@@ -8,6 +8,7 @@ import { ApiResponse } from "../utils/api-response.js";
 import { asyncHandler } from "../utils/async-handler.js";
 import mongoose from "mongoose";
 import { AvailableUserRole, UserRolesEnum } from "../utils/constants.js";
+import { sendEmail } from "../utils/mail.js"; // make sure this is imported
 
 //list the tasks
 const getTasks = asyncHandler(async (req, res) => {
@@ -58,6 +59,35 @@ const createTask = asyncHandler(async (req, res) => {
     assignedBy: new mongoose.Types.ObjectId(req.user._id),
     attachments,
   });
+
+  // send email notification to assigned user
+  if (assignedTo) {
+    const assignedUser = await User.findById(assignedTo);
+    if (assignedUser) {
+      await sendEmail({
+        email: assignedUser.email,
+        subject: `New Task Assigned: ${title}`,
+        mailgenContent: {
+          body: {
+            name: assignedUser.username,
+            intro: `You have been assigned a new task in project "${project.name}"`,
+            table: {
+              data: [
+                { item: "Task", description: title },
+                {
+                  item: "Description",
+                  description: description || "No description",
+                },
+                { item: "Status", description: status || "todo" },
+                { item: "Assigned By", description: req.user.username },
+              ],
+            },
+            outro: "Please login to Project Camp to view your task.",
+          },
+        },
+      });
+    }
+  }
 
   return res
     .status(201)
@@ -358,4 +388,3 @@ export {
   getTasks,
   getTaskById,
 };
-
