@@ -149,6 +149,7 @@ const deleteProject = asyncHandler(async (req, res) => {
 const addMembersToProject = asyncHandler(async (req, res) => {
   const { projectId } = req.params;
   const { email, role } = req.body;
+  console.log("role received:", role); // add this
   const user = await User.findOne({ email });
 
   if (!user) {
