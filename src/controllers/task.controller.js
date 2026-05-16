@@ -1,3 +1,4 @@
+
 import { User } from "../models/user.models.js";
 import { Project } from "../models/project.models.js";
 import { ProjectMember } from "../models/projectmember.models.js";
@@ -8,6 +9,7 @@ import { ApiResponse } from "../utils/api-response.js";
 import { asyncHandler } from "../utils/async-handler.js";
 import mongoose from "mongoose";
 import { AvailableUserRole, UserRolesEnum } from "../utils/constants.js";
+
 import { sendEmail } from "../utils/mail.js"; // make sure this is imported
 
 //list the tasks
@@ -62,7 +64,10 @@ const createTask = asyncHandler(async (req, res) => {
 
   // send email notification to assigned user
   if (assignedTo) {
+     console.log("assignedTo:", assignedTo); // add this
     const assignedUser = await User.findById(assignedTo);
+    console.log("assignedUser:", assignedUser);
+    console.log("sending email to:", assignedUser.email);
     if (assignedUser) {
       await sendEmail({
         email: assignedUser.email,
