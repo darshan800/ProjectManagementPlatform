@@ -1,4 +1,3 @@
-
 import { User } from "../models/user.models.js";
 import { Project } from "../models/project.models.js";
 import { ProjectMember } from "../models/projectmember.models.js";
@@ -16,10 +15,9 @@ import { sendEmail } from "../utils/mail.js"; // make sure this is imported
 const getTasks = asyncHandler(async (req, res) => {
   const { projectId } = req.params;
 
-  const tasks = await Task.find({ project: projectId }).populate(
-    "assignedTo",
-    "avatar username fullname",
-  );
+  const tasks = await Task.find({ project: projectId })
+    .populate("assignedTo", "avatar useraname fullname")
+    .populate("subtasks");
 
   if (!tasks) {
     throw new ApiError(404, "Task does not found ");
@@ -64,7 +62,7 @@ const createTask = asyncHandler(async (req, res) => {
 
   // send email notification to assigned user
   if (assignedTo) {
-     console.log("assignedTo:", assignedTo); // add this
+    console.log("assignedTo:", assignedTo); // add this
     const assignedUser = await User.findById(assignedTo);
     console.log("assignedUser:", assignedUser);
     console.log("sending email to:", assignedUser.email);
@@ -285,6 +283,10 @@ const createSubTask = asyncHandler(async (req, res) => {
     createdBy: req.user._id,
     isCompleted: false,
   });
+
+  task.subtasks.push(subtask._id);
+
+  await task.save();
 
   return res
     .status(201)

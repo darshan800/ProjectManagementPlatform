@@ -42,7 +42,13 @@ const taskSchema = new Schema(
             size:Number
         }],
         default:[]
-    }
+    },
+    subtasks:[
+      {
+        type:Schema.Types.ObjectId,
+        ref:"SubTask"
+      }
+    ]
   },
   { timestamps: true },
 );
